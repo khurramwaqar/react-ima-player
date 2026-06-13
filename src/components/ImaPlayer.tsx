@@ -42,7 +42,6 @@ export function ImaPlayer(props: ImaPlayerProps) {
   const containerStyle: React.CSSProperties = {
     position: 'relative',
     width: width || '100%',
-    height: height || 'auto',
     maxWidth: '100%',
     backgroundColor: '#000',
     ...(skin === 'netflix' ? { borderRadius: 4, overflow: 'hidden' } : {}),
@@ -54,7 +53,6 @@ export function ImaPlayer(props: ImaPlayerProps) {
         ref={player.playerRef as React.Ref<HTMLVideoElement>}
         className="video-js vjs-big-play-centered"
         playsInline
-        style={{ width: '100%', height: '100%' }}
       />
 
       {enablePiP && (

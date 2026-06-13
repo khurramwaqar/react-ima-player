@@ -33,16 +33,25 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
   const playerId = useRef(`vjs-player-${++playerCounter}`).current;
 
   useEffect(() => {
-    if (!playerRef.current) return;
+    let cancelled = false;
 
-    const player = videojs(playerRef.current, {
-      controls: true,
-      autoplay: autoPlay ?? false,
-      muted: muted ?? false,
-      loop: loop ?? false,
-      poster: poster ?? '',
-      fluid: true,
-      html5: {
+    const initPlayer = () => {
+      const element = playerRef.current;
+      if (!element || !document.body.contains(element)) {
+        if (!cancelled) {
+          setTimeout(initPlayer, 50);
+        }
+        return;
+      }
+
+      const player = videojs(element, {
+        controls: true,
+        autoplay: autoPlay ?? false,
+        muted: muted ?? false,
+        loop: loop ?? false,
+        poster: poster ?? '',
+        fluid: true,
+        html5: {
         hls: {
           enableLowInitialPlaylist: true,
           smoothQualityChange: true,
@@ -76,8 +85,12 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
     player.on('error', () => {
       console.error('Video.js error:', player.error());
     });
+    };
+
+    initPlayer();
 
     return () => {
+      cancelled = true;
       if (playerInstance.current) {
         playerInstance.current.dispose();
         playerInstance.current = null;

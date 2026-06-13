@@ -1,0 +1,76 @@
+name: Auto Release & Publish
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    if: ${{ !contains(github.event.head_commit.message, 'Auto release') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - run: git fetch --tags --force
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST_TAG=$(git tag --sort=-v:refname | head -1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "next=v1.0.1" >> $GITHUB_OUTPUT
+          else
+            MAJOR=$(echo $LATEST_TAG | sed 's/v//' | cut -d. -f1)
+            MINOR=$(echo $LATEST_TAG | sed 's/v//' | cut -d. -f2)
+            PATCH=$(echo $LATEST_TAG | sed 's/v//' | cut -d. -f3)
+            echo "next=v$MAJOR.$MINOR.$((PATCH + 1))" >> $GITHUB_OUTPUT
+          fi
+          echo "version: ${{ steps.version.outputs.next }}"
+
+      - run: npm ci
+
+      - name: Sync version
+        run: |
+          VERSION="${{ steps.version.outputs.next }}"
+          VERSION_NO_V="${VERSION#v}"
+          npm version $VERSION_NO_V --no-git-tag-version --allow-same-version
+
+      - run: npm run build
+
+      - run: npm test
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add package.json package-lock.json
+          git commit -m "Auto release ${{ steps.version.outputs.next }} [skip ci]"
+          git tag ${{ steps.version.outputs.next }}
+          git push origin main --tags
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ steps.version.outputs.next }} \
+            --target main \
+            --title "${{ steps.version.outputs.next }}" \
+            --notes "Automated release by GitHub Actions"

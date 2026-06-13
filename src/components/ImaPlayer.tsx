@@ -50,7 +50,9 @@ export function ImaPlayer(props: ImaPlayerProps) {
 
   return (
     <div style={containerStyle} className={`ima-player ima-player--${skin}`}>
-      <div ref={player.playerRef as React.Ref<HTMLDivElement>} data-player-id={player.playerRef ? 'vjs-player' : undefined} />
+      <div data-vjs-player>
+        <video ref={player.playerRef as React.Ref<HTMLVideoElement>} className="video-js vjs-big-play-centered" playsInline />
+      </div>
 
       {enablePiP && (
         <button

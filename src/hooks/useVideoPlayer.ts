@@ -20,7 +20,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
     onReady,
   } = options;
 
-  const playerRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const playerInstance = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,13 +53,12 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
 
     playerInstance.current = player;
 
-    player.src({ src, type: getMimeType(src) });
-
     if (subtitles) {
       addSubtitles(player, subtitles);
     }
 
     player.ready(() => {
+      player.src({ src, type: getMimeType(src) });
       setIsReady(true);
       onReady?.(player);
     });
@@ -85,11 +84,6 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!playerInstance.current || !isReady) return;
-    playerInstance.current.src({ src, type: getMimeType(src) });
-  }, [src, isReady]);
 
   const play = useCallback(() => { playerInstance.current?.play(); }, []);
   const pause = useCallback(() => { playerInstance.current?.pause(); }, []);

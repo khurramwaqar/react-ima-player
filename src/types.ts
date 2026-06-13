@@ -53,7 +53,7 @@ export interface UseVideoPlayerOptions {
 }
 
 export interface UseVideoPlayerResult {
-  playerRef: React.RefObject<HTMLDivElement | null>;
+  playerRef: React.RefObject<HTMLVideoElement | null>;
   player: any;
   isReady: boolean;
   isPlaying: boolean;

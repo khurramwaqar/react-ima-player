@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
 import type { UseVideoPlayerOptions, UseVideoPlayerResult, SubtitleTrack, QualityOption } from '../types';
 
 let playerCounter = 0;
@@ -33,30 +32,17 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
   const playerId = useRef(`vjs-player-${++playerCounter}`).current;
 
   useEffect(() => {
-    let cancelled = false;
-
-    const initPlayer = () => {
-      const element = playerRef.current;
-      if (!element || !document.body.contains(element)) {
-        if (!cancelled) {
-          setTimeout(initPlayer, 50);
-        }
-        return;
-      }
-
-      const player = videojs(element, {
-        controls: true,
-        autoplay: autoPlay ?? false,
-        muted: muted ?? false,
-        loop: loop ?? false,
-        poster: poster ?? '',
-        fluid: true,
-        html5: {
-        hls: {
-          enableLowInitialPlaylist: true,
-          smoothQualityChange: true,
-        },
-      },
+    const element = playerRef.current;
+    if (!element) return;
+    const player = videojs.getPlayer(element) || videojs(element, {
+      controls: true,
+      autoplay: autoPlay ?? false,
+      muted: muted ?? false,
+      loop: loop ?? false,
+      poster: poster ?? '',
+      fluid: true,
+      aspectRatio: '16:9',
+      html5: {},
       plugins: {},
     });
 
@@ -85,14 +71,12 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerRe
     player.on('error', () => {
       console.error('Video.js error:', player.error());
     });
-    };
-
-    initPlayer();
 
     return () => {
-      cancelled = true;
-      if (playerInstance.current) {
-        playerInstance.current.dispose();
+      const p = playerInstance.current;
+      if (p) {
+        p.pause();
+        p.off();
         playerInstance.current = null;
       }
     };

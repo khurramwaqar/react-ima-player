@@ -1,6 +1,6 @@
 {
   "name": "react-ima-player",
-  "version": "1.0.7",
+  "version": "1.0.12",
   "description": "Modern React video player with Google IMA ads, quality selector, PiP, Chromecast, and subtitles. TypeScript-first, Next.js ready.",
   "license": "MIT",
   "author": "",
@@ -13,7 +13,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./dist/*": "./dist/*"
   },
   "files": [
     "dist",
@@ -22,7 +23,7 @@
   ],
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup",
+    "build": "tsup && node -e \"require('fs').copyFileSync(require('path').resolve('node_modules/video.js/dist/video-js.css'), require('path').resolve('dist/video-js.css'))\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
